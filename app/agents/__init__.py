@@ -1,5 +1,5 @@
 import os
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 from .agent_tools import tools
 from ..logger import get_logger
@@ -7,12 +7,12 @@ from ..logger import get_logger
 logger = get_logger(__name__)
 
 # Set up the model and bind the tools to it
-if os.environ.get("GOOGLE_API_KEY"):
-    # We are using gemini-2.5-flash because it is cheap and fast.
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+if os.environ.get("OPENAI_API_KEY"):
+    # We are using gpt-4-turbo-preview because it is cheap and fast.
+    llm = ChatOpenAI(model="gpt-4-turbo-preview")
 else:
-    logger.error("GOOGLE_API_KEY not found. Using a mock LLM for local development.")
-    raise ValueError("GOOGLE_API_KEY not found in environment variables.")
+    logger.error("OPENAI_API_KEY not found. Using a mock LLM for local development.")
+    raise ValueError("OPENAI_API_KEY not found in environment variables.")
 
 from langchain_community.tools import DuckDuckGoSearchRun
 
