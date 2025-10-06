@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LLM Compiler - Agentic AI</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #chat-container {
+            width: 80%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #2b2b2b;
+        }
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 70%;
+            line-height: 1.4;
+        }
+        .user {
+            background-color: #007bff;
+            align-self: flex-end;
+            color: white;
+        }
+        .bot {
+            background-color: #3a3a3a;
+            align-self: flex-start;
+        }
+        #input-area {
+            display: flex;
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+        #prompt-input {
+            flex-grow: 1;
+            background-color: #3a3a3a;
+            border: 1px solid #555;
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: white;
+            font-size: 16px;
+        }
+        #send-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages">
+            <div class="message bot">Welcome to Mycroft! How can I help you today?</div>
+        </div>
+        <div id="input-area">
+            <input type="text" id="prompt-input" placeholder="Type your message here...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const messages = document.getElementById('messages');
+        const promptInput = document.getElementById('prompt-input');
+        const sendButton = document.getElementById('send-button');
+
+        const ws = new WebSocket("ws://localhost:8000/ws");
+
+        ws.onmessage = function(event) {
+            const message = event.data;
+            if (message === "[END]") {
+                return;
+            }
+
+            let lastBotMessage = messages.querySelector('.bot:last-child');
+            if (!lastBotMessage || lastBotMessage.dataset.completed === "true") {
+                lastBotMessage = document.createElement('div');
+                lastBotMessage.classList.add('message', 'bot');
+                lastBotMessage.dataset.completed = "false";
+                messages.appendChild(lastBotMessage);
+            }
+            lastBotMessage.textContent += message;
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        function sendMessage() {
+            const prompt = promptInput.value;
+            if (prompt.trim() === "") return;
+
+            const userMessage = document.createElement('div');
+            userMessage.classList.add('message', 'user');
+            userMessage.textContent = prompt;
+            messages.appendChild(userMessage);
+
+            ws.send(prompt);
+            promptInput.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            let botMessage = document.createElement('div');
+            botMessage.classList.add('message', 'bot');
+            botMessage.dataset.completed = "false";
+            messages.appendChild(botMessage);
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        promptInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
